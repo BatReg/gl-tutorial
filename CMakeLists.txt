@@ -16,3 +16,5 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT g
 add_subdirectory(src)
 add_subdirectory(external)
 add_subdirectory(shaders)
+
+set_property(TARGET gl-tutorial PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>)
