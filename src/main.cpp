@@ -1,7 +1,9 @@
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 static void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
@@ -9,20 +11,6 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 
 const int windowWidth   = 1280;
 const int windowHeight  = 720;
-
-const char *vertexShaderSource = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "}\0";
-
-const char *fragmentShaderSource = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-    "}\n\0";
 
 static std::vector<GLfloat> vertices = {
      0.5f,  0.5f, 0.0f,  // top right
@@ -90,6 +78,14 @@ int main()
 
     int success;
     char infoLog[512];
+    std::ifstream inputStream;
+    std::stringstream stringStream;
+
+    inputStream.open("./shaders/triangle.vert");
+    stringStream << inputStream.rdbuf();
+    inputStream.close();
+    std::string vertexShaderString = stringStream.str();
+    const char* vertexShaderSource = vertexShaderString.c_str();
 
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
@@ -102,6 +98,13 @@ int main()
         std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
         return -1;
     }
+
+    stringStream.str("");
+    inputStream.open("./shaders/triangle.frag");
+    stringStream << inputStream.rdbuf();
+    inputStream.close();
+    std::string fragmentShaderString = stringStream.str();
+    const char* fragmentShaderSource = fragmentShaderString.c_str();
 
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
