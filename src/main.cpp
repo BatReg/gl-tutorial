@@ -3,32 +3,27 @@
 
 #include <fstream>
 #include <iostream>
+#include <cmath>
 #include <sstream>
 #include <vector>
+
+#include "pipeline.h"
 
 static void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
-const int windowWidth   = 1280;
-const int windowHeight  = 720;
+const int windowWidth   = 800;
+const int windowHeight  = 600;
 
 static std::vector<GLfloat> vertices = {
-     0.5f,  0.5f, 0.0f,  // top right
-     0.5f, -0.5f, 0.0f,  // bottom right
-    -0.5f, -0.5f, 0.0f,  // bottom left
-    -0.5f,  0.5f, 0.0f   // top left 
+     // positions         // colors
+     0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
+    -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
 };
-
-static std::vector<GLuint> indices = {
-    0, 1, 3,   // first triangle
-    1, 2, 3    // second triangle
-}; 
 
 static GLuint VAO;
 static GLuint VBO;
-static GLuint EBO;
-static GLuint vertexShader;
-static GLuint fragmentShader;
 static GLuint shaderProgram;
 
 int main()
@@ -65,74 +60,45 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), static_cast<void*>(0));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), static_cast<void*>(0));
     glEnableVertexAttribArray(0);
 
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void*>(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    int success;
-    char infoLog[512];
-    std::ifstream inputStream;
-    std::stringstream stringStream;
+    ShaderCreateInfo vertexShaderInfo{};
+    vertexShaderInfo.type = ShaderType::Vertex;
+    vertexShaderInfo.path = "./shaders/triangle.vert";
 
-    inputStream.open("./shaders/triangle.vert");
-    stringStream << inputStream.rdbuf();
-    inputStream.close();
-    std::string vertexShaderString = stringStream.str();
-    const char* vertexShaderSource = vertexShaderString.c_str();
-
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-    glCompileShader(vertexShader);
-
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if(!success)
+    Shader vertexShader{};
+    if(!vertexShader.Create(vertexShaderInfo))
     {
-        glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
         return -1;
     }
 
-    stringStream.str("");
-    inputStream.open("./shaders/triangle.frag");
-    stringStream << inputStream.rdbuf();
-    inputStream.close();
-    std::string fragmentShaderString = stringStream.str();
-    const char* fragmentShaderSource = fragmentShaderString.c_str();
+    ShaderCreateInfo fragmentShaderInfo{};
+    fragmentShaderInfo.type = ShaderType::Fragment;
+    fragmentShaderInfo.path = "./shaders/triangle.frag";
 
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-    glCompileShader(fragmentShader);
-
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if(!success)
+    Shader fragmentShader{};
+    if(!fragmentShader.Create(fragmentShaderInfo))
     {
-        glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
         return -1;
     }
 
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if(!success)
+    PipelineCreateInfo pipelineCreateInfo{vertexShader, fragmentShader};
+    Pipeline pipeline;
+    if(!pipeline.Create(pipelineCreateInfo))
     {
-        glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
-        std::cout << "ERROR::SHADER::LINK_FAILED\n" << infoLog << std::endl;
         return -1;
     }
 
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    vertexShader.Dispose();
+    fragmentShader.Dispose();
 
     while(!glfwWindowShouldClose(window))
     {
@@ -140,8 +106,8 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         glBindVertexArray(VAO);
-        glUseProgram(shaderProgram);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        pipeline.SetActive();
+        glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(vertices.size()));
 
         glfwPollEvents();
         glfwSwapBuffers(window);

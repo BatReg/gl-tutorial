@@ -1,1 +1,4 @@
-add_executable(gl-tutorial main.cpp)
+add_executable(gl-tutorial main.cpp
+                           pipeline.h
+                           pipeline.cpp
+)
