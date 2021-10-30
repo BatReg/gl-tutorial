@@ -107,6 +107,8 @@ int main()
 
         glBindVertexArray(VAO);
         pipeline.SetActive();
+        float xOffset = static_cast<float>(sin(glfwGetTime() * 2.0f)) / 2.0f;
+        pipeline.SetFloat("xOffset", xOffset);
         glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(vertices.size()));
 
         glfwPollEvents();
