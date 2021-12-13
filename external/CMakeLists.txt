@@ -13,3 +13,7 @@ target_link_libraries(gl-tutorial glfw)
 # OpenGL
 find_package(OpenGL REQUIRED)
 target_link_libraries(gl-tutorial OpenGL::GL)
+
+# STB
+add_subdirectory(stb)
+target_link_libraries(gl-tutorial stb)
