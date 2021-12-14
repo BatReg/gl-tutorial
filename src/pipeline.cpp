@@ -1,5 +1,7 @@
 #include "pipeline.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -126,6 +128,11 @@ void Pipeline::SetInt(const std::string& name, int value) const
 void Pipeline::SetFloat(const std::string& name, float value) const
 {
     glUniform1f(glGetUniformLocation(id, name.c_str()), value);
+}
+
+void Pipeline::SetMatrix4x4(const std::string& name, const glm::mat4& value) const
+{
+    glUniformMatrix4fv(glGetUniformLocation(id, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
 }
 
 GLenum FromShaderTypeToEnum(ShaderType type)
