@@ -1,6 +1,8 @@
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <stb/stb_image.h>
 
 #include <fstream>
@@ -130,7 +132,7 @@ int main()
     int width;
     int height;
     int nrChannels;
-    unsigned char* data = stbi_load("assets/textures/container.jpg", &width, &height, &nrChannels, 0);
+    unsigned char* data = stbi_load("./assets/textures/container.jpg", &width, &height, &nrChannels, 0);
 
     if(data)
     {
@@ -152,7 +154,7 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    data = stbi_load("assets/textures/awesomeface.png", &width, &height, &nrChannels, 0);
+    data = stbi_load("./assets/textures/awesomeface.png", &width, &height, &nrChannels, 0);
 
     if(data)
     {
@@ -166,7 +168,6 @@ int main()
     }
 
     stbi_image_free(data);
-
 
     while(!glfwWindowShouldClose(window))
     {
@@ -183,6 +184,19 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
         pipeline.SetInt("texture2", 1);
+
+        glm::mat4 trans = glm::mat4(1.0f);
+        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0));
+        pipeline.SetMatrix4x4("transform", trans);
+
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        trans = glm::mat4(1.0f);
+        trans = glm::translate(trans, glm::vec3(-0.5, 0.5f, 0.0f));
+        float scale = (static_cast<float>(sin(glfwGetTime())) + 1.0f) / 2.0f;
+        trans = glm::scale(trans, glm::vec3(scale, scale, scale));
+        pipeline.SetMatrix4x4("transform", trans);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
