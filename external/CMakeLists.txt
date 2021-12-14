@@ -17,3 +17,7 @@ target_link_libraries(gl-tutorial OpenGL::GL)
 # STB
 add_subdirectory(stb)
 target_link_libraries(gl-tutorial stb)
+
+# GLM
+add_subdirectory(glm)
+target_link_libraries(gl-tutorial glm)

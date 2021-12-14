@@ -1,5 +1,6 @@
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
+#include <glm/glm.hpp>
 #include <stb/stb_image.h>
 
 #include <fstream>
@@ -182,9 +183,6 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
         pipeline.SetInt("texture2", 1);
-
-        float xOffset = static_cast<float>(sin(glfwGetTime() * 2.0f)) / 2.0f;
-        pipeline.SetFloat("xOffset", xOffset);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
