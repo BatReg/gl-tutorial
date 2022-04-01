@@ -11,10 +11,14 @@
 #include <sstream>
 #include <vector>
 
+#include "camera.h"
 #include "pipeline.h"
 
 static void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+static void MouseCallback(GLFWwindow* window, double xPos, double yPos);
+static void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
+static void ProcessInput(GLFWwindow* window);
 
 const int windowWidth   = 1600;
 const int windowHeight  = 1200;
@@ -81,6 +85,14 @@ static std::vector<glm::vec3> cubePositions = {
     glm::vec3(-1.3f,  1.0f, -1.5f)
 };
 
+static float deltaTime = 0.0f;
+static float lastTime = 0.0f;
+
+static bool firstMouse = true;
+static float lastX = windowWidth / 2;
+static float lastY = windowHeight / 2;
+static Camera camera(glm::vec3{0.0f, 0.0f, 3.0f});
+
 static GLuint VAO;
 static GLuint VBO;
 static GLuint EBO;
@@ -116,6 +128,11 @@ int main()
     glViewport(0, 0, windowWidth, windowHeight);
     glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
     glfwSetKeyCallback(window, KeyCallback);
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, MouseCallback);
+
+    glfwSetScrollCallback(window, ScrollCallback);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -217,11 +234,14 @@ int main()
 
     stbi_image_free(data);
 
-    glm::mat4 view = glm::mat4(1.0f);
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-
     while(!glfwWindowShouldClose(window))
     {
+        float currentTime = static_cast<float>(glfwGetTime());
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        ProcessInput(window);
+
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -240,9 +260,10 @@ int main()
         int height;
         glfwGetWindowSize(window, &width, &height);
 
-        glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
-
+        glm::mat4 view = camera.GetViewMatrix();
         pipeline.SetMatrix4x4("view", view);
+
+        glm::mat4 proj = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 100.0f);
         pipeline.SetMatrix4x4("proj", proj);
 
         for(size_t i = 0; i < cubePositions.size(); i++)
@@ -286,10 +307,59 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
     if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, true);
+        return;
     }
     else if(key == GLFW_KEY_F && action == GLFW_RELEASE)
     {
         isWireframe = !isWireframe;
         glPolygonMode(GL_FRONT_AND_BACK, isWireframe ? GL_LINE : GL_FILL);
+        return;
+    }
+}
+
+static void MouseCallback(GLFWwindow* window, double xPosIn, double yPosIn)
+{
+    float xPos = static_cast<float>(xPosIn);
+    float yPos = static_cast<float>(yPosIn);
+
+    if (firstMouse)
+    {
+        lastX = xPos;
+        lastY = yPos;
+        firstMouse = false;
+    }
+
+    float xoffset = xPos - lastX;
+    float yoffset = lastY - yPos; // reversed since y-coordinates go from bottom to top
+
+    lastX = xPos;
+    lastY = yPos;
+
+    camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+static void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
+{
+    camera.ProcessMouseScroll(static_cast<float>(yOffset));
+}
+
+static void ProcessInput(GLFWwindow* window)
+{
+    const float cameraSpeed = 10.0f * deltaTime;
+    if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(CameraMovement::FORWARD, deltaTime);
+    }
+    if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(CameraMovement::BACKWARD, deltaTime);
+    }
+    if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(CameraMovement::LEFT, deltaTime);
+    }
+    if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(CameraMovement::RIGHT, deltaTime);
     }
 }
