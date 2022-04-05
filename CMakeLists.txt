@@ -13,9 +13,7 @@ project(gl-tutorial)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT gl-tutorial)
 
-add_subdirectory(src)
 add_subdirectory(external)
 add_subdirectory(shaders)
 add_subdirectory(assets)
-
-set_property(TARGET gl-tutorial PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>)
+add_subdirectory(src)

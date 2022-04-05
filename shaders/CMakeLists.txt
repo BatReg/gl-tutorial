@@ -23,5 +23,3 @@ add_custom_target(
     SOURCES ${SHADER_SOURCE_FILES}
 )
 source_group("Source Files" FILES ${SHADER_SOURCE_FILES})
-
-add_dependencies(gl-tutorial shaders)
