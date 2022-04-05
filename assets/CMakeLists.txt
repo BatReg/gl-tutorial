@@ -23,5 +23,3 @@ add_custom_target(
     SOURCES ${TEXTURE_FILES}
 )
 source_group("Textures" FILES ${TEXTURE_FILES})
-
-add_dependencies(gl-tutorial assets)

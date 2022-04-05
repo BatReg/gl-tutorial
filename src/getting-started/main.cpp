@@ -307,13 +307,11 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
     if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, true);
-        return;
     }
     else if(key == GLFW_KEY_F && action == GLFW_RELEASE)
     {
         isWireframe = !isWireframe;
         glPolygonMode(GL_FRONT_AND_BACK, isWireframe ? GL_LINE : GL_FILL);
-        return;
     }
 }
 
@@ -350,14 +348,17 @@ static void ProcessInput(GLFWwindow* window)
     {
         camera.ProcessKeyboard(CameraMovement::FORWARD, deltaTime);
     }
+
     if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
         camera.ProcessKeyboard(CameraMovement::BACKWARD, deltaTime);
     }
+
     if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
         camera.ProcessKeyboard(CameraMovement::LEFT, deltaTime);
     }
+
     if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
         camera.ProcessKeyboard(CameraMovement::RIGHT, deltaTime);
