@@ -1,9 +1,11 @@
 function(configure_chapter CHAPTER_NAME)
-    add_executable(${CHAPTER_NAME} ../common/pipeline.h
-                                   ../common/pipeline.cpp
+    add_executable(${CHAPTER_NAME} ../common/application.h
+                                   ../common/application.cpp
+                                   ../common/entry_point.h
                                    ../common/camera.h
                                    ../common/camera.cpp
-                                   main.cpp
+                                   ../common/pipeline.h
+                                   ../common/pipeline.cpp
     )
 
     target_include_directories(${CHAPTER_NAME} PRIVATE ../common/)
