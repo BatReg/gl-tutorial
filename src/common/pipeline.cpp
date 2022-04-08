@@ -15,6 +15,7 @@ bool Shader::Create(const ShaderCreateInfo& info)
 
     if(inputStream.fail())
     {
+        std::cout << "ERROR::SHADER::" << info.path << "::FAILED_TO_OPEN_FILE" << std::endl;
         id = 0;
         return false;
     }

@@ -1,5 +1,7 @@
 file(GLOB_RECURSE SHADER_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.vert
                                       ${CMAKE_CURRENT_SOURCE_DIR}/src/*.frag
+                                      ${CMAKE_CURRENT_SOURCE_DIR}/src/*.vs
+                                      ${CMAKE_CURRENT_SOURCE_DIR}/src/*.fs
 )
 
 foreach(SHADER_FILE ${SHADER_SOURCE_FILES})

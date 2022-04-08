@@ -47,7 +47,9 @@ protected:
     GLFWwindow* _window{};
 
 private:
-    const ApplicationCreateInfo _info;
+    std::string title;
+    int windowWidth;
+    int windowHeight;
 
     bool _isRunning{};
     float _lastTime{};

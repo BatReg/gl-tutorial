@@ -13,8 +13,8 @@ enum class ShaderType
 
 struct ShaderCreateInfo
 {
-    ShaderType type;
-    std::string path;
+    ShaderType type{};
+    std::string path{};
 };
 
 class Shader
@@ -27,13 +27,22 @@ public:
     GLuint GetId() const;
 
 private:
-    GLuint id;
+    GLuint id{};
 };
 
 struct PipelineCreateInfo
 {
-    Shader& vertexShader;
-    Shader& fragmentShader;
+    const Shader& vertexShader;
+    const Shader& fragmentShader;
+
+    PipelineCreateInfo(const Shader& vertexShader, const Shader& fragmentShader) : 
+        vertexShader(vertexShader), fragmentShader(fragmentShader)
+    {
+    }
+
+    PipelineCreateInfo() = delete;
+    PipelineCreateInfo(const PipelineCreateInfo&) = delete;
+    PipelineCreateInfo& operator=(const PipelineCreateInfo& o) = delete;
 };
 
 class Pipeline
@@ -52,7 +61,7 @@ public:
     void SetMatrix4x4(const std::string& name, const glm::mat4& value) const;
 
 private:
-    GLuint id;
+    GLuint id{};
 };
 
 static GLenum FromShaderTypeToEnum(ShaderType type);

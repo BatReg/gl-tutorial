@@ -11,7 +11,8 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 static void MouseCallback(GLFWwindow* window, double xPos, double yPos);
 static void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 
-Application::Application(const ApplicationCreateInfo& info) noexcept : _info(info)
+Application::Application(const ApplicationCreateInfo& info) noexcept : 
+    title(info.title), windowWidth(info.windowWidth), windowHeight(info.windowHeight)
 {
 }
 
@@ -97,7 +98,7 @@ bool Application::InitWindow()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    _window = glfwCreateWindow(_info.windowWidth, _info.windowHeight, _info.title.c_str(), nullptr, nullptr);
+    _window = glfwCreateWindow(windowWidth, windowHeight, title.c_str(), nullptr, nullptr);
     if(_window == nullptr)
     {
         std::cout << "Failed to create a GLFW window" << std::endl;
@@ -125,7 +126,7 @@ bool Application::InitGL()
         return false;
     }
 
-    glViewport(0, 0, _info.windowWidth, _info.windowHeight);
+    glViewport(0, 0, windowWidth, windowHeight);
     glEnable(GL_DEPTH_TEST);
 
     return true;
@@ -134,6 +135,8 @@ bool Application::InitGL()
 void Application::OnFramebufferSize(int width, int height)
 {
     glViewport(0, 0, width, height);
+    windowWidth = width;
+    windowHeight = height;
 }
 
 static void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
