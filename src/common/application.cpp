@@ -2,7 +2,6 @@
 
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
-#include <stb/stb_image.h>
 
 #include <iostream>
 
@@ -12,7 +11,7 @@ static void MouseCallback(GLFWwindow* window, double xPos, double yPos);
 static void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 
 Application::Application(const ApplicationCreateInfo& info) noexcept : 
-    title(info.title), windowWidth(info.windowWidth), windowHeight(info.windowHeight)
+    _title(info.title), _windowWidth(info.windowWidth), _windowHeight(info.windowHeight)
 {
 }
 
@@ -35,8 +34,6 @@ int Application::Run()
         deltaTime = currentTime - _lastTime;
         _lastTime = currentTime;
 
-        ProcessInput();
-
         Update(deltaTime);
 
         glfwPollEvents();
@@ -49,8 +46,6 @@ int Application::Run()
 
 bool Application::Init()
 {
-    stbi_set_flip_vertically_on_load(true);
-
     if(!InitWindow())
     {
         std::cout << "Failed to initialize window" << std::endl;
@@ -75,10 +70,6 @@ void Application::Dispose()
     glfwTerminate();
 }
 
-void Application::ProcessInput()
-{
-}
-
 void Application::OnKey(int key, int scancode, int action, int mods)
 {
 }
@@ -98,7 +89,7 @@ bool Application::InitWindow()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    _window = glfwCreateWindow(windowWidth, windowHeight, title.c_str(), nullptr, nullptr);
+    _window = glfwCreateWindow(_windowWidth, _windowHeight, _title.c_str(), nullptr, nullptr);
     if(_window == nullptr)
     {
         std::cout << "Failed to create a GLFW window" << std::endl;
@@ -126,7 +117,7 @@ bool Application::InitGL()
         return false;
     }
 
-    glViewport(0, 0, windowWidth, windowHeight);
+    glViewport(0, 0, _windowWidth, _windowHeight);
     glEnable(GL_DEPTH_TEST);
 
     return true;
@@ -135,8 +126,8 @@ bool Application::InitGL()
 void Application::OnFramebufferSize(int width, int height)
 {
     glViewport(0, 0, width, height);
-    windowWidth = width;
-    windowHeight = height;
+    _windowWidth = width;
+    _windowHeight = height;
 }
 
 static void FramebufferSizeCallback(GLFWwindow* window, int width, int height)

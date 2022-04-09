@@ -27,8 +27,6 @@ protected:
     virtual void Update(float deltaTime);
     virtual void Dispose();
 
-    virtual void ProcessInput();
-
     virtual void OnKey(int key, int scancode, int action, int mods);
     virtual void OnMouse(double xPos, double yPos);
     virtual void OnScroll(double xOffset, double yOffset);
@@ -46,11 +44,11 @@ private:
 protected:
     GLFWwindow* _window{};
 
-private:
-    std::string title;
-    int windowWidth;
-    int windowHeight;
+    std::string _title;
+    int _windowWidth;
+    int _windowHeight;
 
+private:
     bool _isRunning{};
     float _lastTime{};
 };

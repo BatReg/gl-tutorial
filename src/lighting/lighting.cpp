@@ -1,6 +1,8 @@
 #include "lighting.h"
 
 #include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <iostream>
 
@@ -99,8 +101,49 @@ bool LightingTutorial::InitShaders()
 
 void LightingTutorial::Update(float deltaTime)
 {
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    ProcessInput(deltaTime);
+
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    lightingShader.SetActive();
+    lightingShader.SetVec3("objectColor", glm::vec3{ 1.0f, 0.5f, 0.31f });
+    lightingShader.SetVec3("lightColor", glm::vec3{ 1.0f, 1.0f, 1.0f });
+
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)_windowWidth / (float)_windowHeight, 0.1f, 100.0f);
+    glm::mat4 view = camera.GetViewMatrix();
+    lightingShader.SetMatrix4x4("projection", projection);
+    lightingShader.SetMatrix4x4("view", view);
+
+    glm::mat4 model = glm::mat4{ 1.0f };
+    lightingShader.SetMatrix4x4("model", model);
+
+    glBindVertexArray(cubeVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    lightCubeShader.SetActive();
+    lightCubeShader.SetMatrix4x4("projection", projection);
+    lightCubeShader.SetMatrix4x4("view", view);
+
+    model = glm::mat4{ 1.0f };
+    model = glm::translate(model, _lightPos);
+    model = glm::scale(model, glm::vec3{ 0.2f });
+    lightCubeShader.SetMatrix4x4("model", model);
+
+    glBindVertexArray(lightCubeVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void LightingTutorial::Dispose()
+{
+    lightCubeShader.Dispose();
+    lightingShader.Dispose();
+
+    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &lightCubeVAO);
+    glDeleteVertexArrays(1, &cubeVAO);
+
+    Application::Dispose();
 }
 
 void LightingTutorial::OnKey(int key, int scancode, int action, int mods)
@@ -108,5 +151,55 @@ void LightingTutorial::OnKey(int key, int scancode, int action, int mods)
     if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(_window, true);
+    }
+}
+
+void LightingTutorial::OnMouse(double xPosIn, double yPosIn)
+{
+    float xPos = static_cast<float>(xPosIn);
+    float yPos = static_cast<float>(yPosIn);
+
+    if(_firstMouse)
+    {
+        _lastX = xPos;
+        _lastY = yPos;
+        _firstMouse = false;
+    }
+
+    float xOffset = xPos - _lastX;
+    float yOffset = _lastY - yPos;
+
+    _lastX = xPos;
+    _lastY = yPos;
+
+    camera.ProcessMouseMovement(xOffset, yOffset);
+}
+
+void LightingTutorial::OnScroll(double xOffset, double yOffset)
+{
+    camera.ProcessMouseScroll(static_cast<float>(yOffset));
+}
+
+void LightingTutorial::ProcessInput(float deltaTime)
+{
+    const float cameraSpeed = 10.0f * deltaTime;
+    if(glfwGetKey(_window, GLFW_KEY_W) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(CameraMovement::FORWARD, deltaTime);
+    }
+
+    if(glfwGetKey(_window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(CameraMovement::BACKWARD, deltaTime);
+    }
+
+    if(glfwGetKey(_window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(CameraMovement::LEFT, deltaTime);
+    }
+
+    if(glfwGetKey(_window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(CameraMovement::RIGHT, deltaTime);
     }
 }

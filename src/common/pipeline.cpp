@@ -131,6 +131,11 @@ void Pipeline::SetFloat(const std::string& name, float value) const
     glUniform1f(glGetUniformLocation(id, name.c_str()), value);
 }
 
+void Pipeline::SetVec3(const std::string& name, const glm::vec3& value) const
+{
+    glUniform3f(glGetUniformLocation(id, name.c_str()), value.x, value.y, value.z);
+}
+
 void Pipeline::SetMatrix4x4(const std::string& name, const glm::mat4& value) const
 {
     glUniformMatrix4fv(glGetUniformLocation(id, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
