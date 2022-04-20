@@ -5,10 +5,10 @@
 
 #include <iostream>
 
-static void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
-static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-static void MouseCallback(GLFWwindow* window, double xPos, double yPos);
-static void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
+void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void MouseCallback(GLFWwindow* window, double xPos, double yPos);
+void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 
 Application::Application(const ApplicationCreateInfo& info) noexcept : 
     _title(info.title), _windowWidth(info.windowWidth), _windowHeight(info.windowHeight)
@@ -61,7 +61,7 @@ bool Application::Init()
     return true;
 }
 
-void Application::Update(float deltaTime)
+void Application::Update(float)
 {
 }
 
@@ -70,15 +70,15 @@ void Application::Dispose()
     glfwTerminate();
 }
 
-void Application::OnKey(int key, int scancode, int action, int mods)
+void Application::OnKey(int, int, int, int)
 {
 }
 
-void Application::OnMouse(double xPos, double yPos)
+void Application::OnMouse(double, double)
 {
 }
 
-void Application::OnScroll(double xOffset, double yOffset)
+void Application::OnScroll(double, double)
 {
 }
 
@@ -130,25 +130,25 @@ void Application::OnFramebufferSize(int width, int height)
     _windowHeight = height;
 }
 
-static void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
+void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
     Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
     app->OnFramebufferSize(width, height);
 }
 
-static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
     app->OnKey(key, scancode, action, mods);
 }
 
-static void MouseCallback(GLFWwindow* window, double xPos, double yPos)
+void MouseCallback(GLFWwindow* window, double xPos, double yPos)
 {
     Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
     app->OnMouse(xPos, yPos);
 }
 
-static void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
+void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
 {
     Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
     app->OnScroll(xOffset, yOffset);

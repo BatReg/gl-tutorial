@@ -34,13 +34,16 @@ void LightingTutorial::InitGLBuffers()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), static_cast<void*>(0));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void*>(0));
     glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void*>(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
 
     glBindVertexArray(lightCubeVAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), static_cast<void*>(0));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void*>(0));
     glEnableVertexAttribArray(0);
 }
 
@@ -106,9 +109,14 @@ void LightingTutorial::Update(float deltaTime)
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    _lightPos.x = sin(static_cast<float>(glfwGetTime()));
+    _lightPos.z = cos(static_cast<float>(glfwGetTime()));
+
     lightingShader.SetActive();
     lightingShader.SetVec3("objectColor", glm::vec3{ 1.0f, 0.5f, 0.31f });
     lightingShader.SetVec3("lightColor", glm::vec3{ 1.0f, 1.0f, 1.0f });
+    lightingShader.SetVec3("lightPos", _lightPos);
+    lightingShader.SetVec3("viewPos", camera.Position);
 
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)_windowWidth / (float)_windowHeight, 0.1f, 100.0f);
     glm::mat4 view = camera.GetViewMatrix();
