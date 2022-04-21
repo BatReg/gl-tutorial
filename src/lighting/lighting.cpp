@@ -4,7 +4,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
+
 #include <iostream>
+
+static bool LoadTexture(const std::string& imagePath, GLuint* texture);
 
 bool LightingTutorial::Init()
 {
@@ -21,6 +26,12 @@ bool LightingTutorial::Init()
         return false;
     }
 
+    if(!InitTextures())
+    {
+        std::cout << "Failed to initialize textures" << std::endl;
+        return false;
+    }
+
     return true;
 }
 
@@ -34,16 +45,19 @@ void LightingTutorial::InitGLBuffers()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void*>(0));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), reinterpret_cast<void*>(0));
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void*>(3 * sizeof(GLfloat)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), reinterpret_cast<void*>(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), reinterpret_cast<void*>(6 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(2);
 
     glBindVertexArray(lightCubeVAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void*>(0));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), reinterpret_cast<void*>(0));
     glEnableVertexAttribArray(0);
 }
 
@@ -102,6 +116,26 @@ bool LightingTutorial::InitShaders()
     return true;
 }
 
+bool LightingTutorial::InitTextures()
+{    
+    std::string diffuseTexturePath{ "./assets/textures/container2.png" };
+    std::string specularTexturePath{ "./assets/textures/container2_specular.png" };
+
+    if(!LoadTexture(diffuseTexturePath, &diffuseMap))
+    {
+        std::cout << "Failed to load texture: " << diffuseTexturePath << std::endl;
+        return false;
+    }
+
+    if(!LoadTexture(specularTexturePath, &specularMap))
+    {
+        std::cout << "Failed to load texture: " << specularTexturePath << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 void LightingTutorial::Update(float deltaTime)
 {
     ProcessInput(deltaTime);
@@ -109,27 +143,19 @@ void LightingTutorial::Update(float deltaTime)
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // _lightPos.x = sin(static_cast<float>(glfwGetTime()));
-    // _lightPos.z = cos(static_cast<float>(glfwGetTime()));
+    lightingShader.SetActive();
 
-    lightingShader.SetActive();    
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, diffuseMap);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, specularMap);
     
-    lightingShader.SetVec3("material.ambient", { 1.0f, 0.5f, 0.31f });
-    lightingShader.SetVec3("material.diffuse", { 1.0f, 0.5f, 0.31f });
-    lightingShader.SetVec3("material.specular", { 0.5f, 0.5f, 0.5f });
+    lightingShader.SetInt("material.diffuse", 0);
+    lightingShader.SetInt("material.specular", 1);
     lightingShader.SetFloat("material.shininess", 32.0f);
 
-    float glfwTime = static_cast<float>(glfwGetTime());
-    glm::vec3 lightColor{};
-    lightColor.x = sin(glfwTime * 2.0f);
-    lightColor.y = sin(glfwTime * 0.7f);
-    lightColor.z = sin(glfwTime * 1.3f);
-
-    glm::vec3 lightDiffuseColor = lightColor * glm::vec3{0.5f};
-    glm::vec3 lightAmbientColor = lightDiffuseColor * glm::vec3{0.2f};
-
-    lightingShader.SetVec3("light.ambient",  lightAmbientColor);
-    lightingShader.SetVec3("light.diffuse",  lightDiffuseColor); 
+    lightingShader.SetVec3("light.ambient",  { 0.2f, 0.2f, 0.2f });
+    lightingShader.SetVec3("light.diffuse",  { 0.5f, 0.5f, 0.5f });
     lightingShader.SetVec3("light.specular", { 1.0f, 1.0f, 1.0f });     
     lightingShader.SetVec3("light.position", _lightPos);
 
@@ -151,7 +177,7 @@ void LightingTutorial::Update(float deltaTime)
     lightCubeShader.SetActive();
     lightCubeShader.SetMatrix4x4("projection", projection);
     lightCubeShader.SetMatrix4x4("view", view);
-    lightCubeShader.SetVec3("lightDiffuse", lightDiffuseColor);
+    lightCubeShader.SetVec3("lightDiffuse", { 1.0f, 1.0f, 1.0f });
 
     model = glm::mat4{ 1.0f };
     model = glm::translate(model, _lightPos);
@@ -230,4 +256,47 @@ void LightingTutorial::ProcessInput(float deltaTime)
     {
         camera.ProcessKeyboard(CameraMovement::RIGHT, deltaTime);
     }
+}
+
+bool LoadTexture(const std::string& imagePath, GLuint* texture)
+{
+    glGenTextures(1, texture);
+    glBindTexture(GL_TEXTURE_2D, *texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int width;
+    int height;
+    int nrChannels;
+    unsigned char* data = stbi_load(imagePath.c_str(), &width, &height, &nrChannels, 0);
+
+    GLenum format{};
+    if(nrChannels == 1)
+    {
+        format = GL_RED;
+    }
+    else if (nrChannels == 3)
+    {
+        format = GL_RGB;
+    }
+    else if (nrChannels == 4)
+    {
+        format = GL_RGBA;
+    }
+
+    if(data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        stbi_image_free(data);
+    }
+    else
+    {
+        stbi_image_free(data);
+        return false;
+    }
+
+    return true;
 }
