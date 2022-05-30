@@ -32,6 +32,8 @@ bool LightingTutorial::Init()
         return false;
     }
 
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+
     return true;
 }
 
@@ -140,46 +142,65 @@ void LightingTutorial::Update(float deltaTime)
 {
     ProcessInput(deltaTime);
 
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)_windowWidth / (float)_windowHeight, 0.1f, 100.0f);
+    glm::mat4 view = camera.GetViewMatrix();
+
+    DrawObjects(projection, view);
+    // DrawLights(projection, view);
+}
+
+void LightingTutorial::DrawObjects(const glm::mat4& proj, const glm::mat4& view)
+{
     lightingShader.SetActive();
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, specularMap);
-    
+
     lightingShader.SetInt("material.diffuse", 0);
     lightingShader.SetInt("material.specular", 1);
     lightingShader.SetFloat("material.shininess", 32.0f);
 
     lightingShader.SetVec3("light.ambient",  { 0.2f, 0.2f, 0.2f });
     lightingShader.SetVec3("light.diffuse",  { 0.5f, 0.5f, 0.5f });
-    lightingShader.SetVec3("light.specular", { 1.0f, 1.0f, 1.0f });     
-    lightingShader.SetVec3("light.position", _lightPos);
+    lightingShader.SetVec3("light.specular", { 1.0f, 1.0f, 1.0f });
+    lightingShader.SetVec3("light.direction", {-0.2f, -1.0f, -0.3f});
 
     lightingShader.SetVec3("viewPos", camera.Position);
 
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)_windowWidth / (float)_windowHeight, 0.1f, 100.0f);
-    glm::mat4 view = camera.GetViewMatrix();
-    lightingShader.SetMatrix4x4("projection", projection);
+    lightingShader.SetMatrix4x4("projection", proj);
     lightingShader.SetMatrix4x4("view", view);
 
-    glm::mat4 model = glm::mat4{ 1.0f };
-    glm::mat4 model_IT = glm::transpose(glm::inverse(model));
-    lightingShader.SetMatrix4x4("model", model);
-    lightingShader.SetMatrix4x4("model_IT", model_IT);
-
     glBindVertexArray(cubeVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    for(size_t i = 0; i < cubePositions.size(); i++)
+    {
+        glm::mat4 model = glm::mat4{ 1.0f };
+        model = glm::translate(model, cubePositions[i]);
 
+        float angle = 20.0f * i;
+        model = glm::rotate(model, glm::radians(angle), glm::vec3{1.0f, 0.3f, 0.5f});
+
+        glm::mat4 model_IT = glm::transpose(glm::inverse(model));
+
+        lightingShader.SetMatrix4x4("model", model);
+        lightingShader.SetMatrix4x4("model_IT", model_IT);
+
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+}
+
+void LightingTutorial::DrawLights(const glm::mat4& proj, const glm::mat4& view)
+{
     lightCubeShader.SetActive();
-    lightCubeShader.SetMatrix4x4("projection", projection);
+    lightCubeShader.SetMatrix4x4("projection", proj);
     lightCubeShader.SetMatrix4x4("view", view);
     lightCubeShader.SetVec3("lightDiffuse", { 1.0f, 1.0f, 1.0f });
 
-    model = glm::mat4{ 1.0f };
+    glm::mat4 model = glm::mat4{ 1.0f };
     model = glm::translate(model, _lightPos);
     model = glm::scale(model, glm::vec3{ 0.2f });
     lightCubeShader.SetMatrix4x4("model", model);
